@@ -8,7 +8,5 @@ using Fusion;
 public class GameManager : MonoBehaviour
 {
     public TMP_InputField inputField;
-    public PlayerManager manager;
-
-    
+    public PlayerManager manager; 
 }

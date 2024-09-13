@@ -17,12 +17,12 @@ public class PlayerManager : NetworkBehaviour
     public GameObject cameraPrefab;
     [SerializeField] LineRenderer line;
     [SerializeField] private GameObject gun;
-    public int killCount=0;
-    public TMP_Text killCountText;
     public LayerMask mask;
     public TMP_Text textToDisplay;
+    public TMP_Text killCountText;
+    public int killCount = 0;
     [Networked, OnChangedRender(nameof(OnNameChanged))] public string NetworkedPlayerName {  get; set; }
-    [Networked] public string killCountTMP {  get; set; }
+    [Networked, OnChangedRender(nameof(OnKillCountChange))] public int NetworkedKillCount {  get; set; }
 
 
     
@@ -33,9 +33,8 @@ public class PlayerManager : NetworkBehaviour
             GameObject cameraObject = Instantiate(cameraPrefab);
             cam = cameraObject.GetComponent<Camera>();
             cam.GetComponent<CameraController>().playerBody = transform;
-            UpdateKillCountUI();
-            NetworkedPlayerName = Runner.GetComponent<PlayerSpawn>().name;
         }
+        textToDisplay.text = NetworkedPlayerName.ToString();
     }
 
     public override void FixedUpdateNetwork()
@@ -47,6 +46,13 @@ public class PlayerManager : NetworkBehaviour
         
     }
 
+    void OnKillCountChange()
+    {
+        if (HasStateAuthority)
+        {
+            killCountText.text = "Kills: " + NetworkedKillCount.ToString();
+        }
+    }
     private void Update(){
         if(HasStateAuthority){
             if(Input.GetButtonDown("Fire1")){
@@ -55,6 +61,13 @@ public class PlayerManager : NetworkBehaviour
         }
     }
 
+    public void SetPLayerName(string name)
+    {
+        if (HasStateAuthority)
+        {
+            RPC_ConfigureName(name);
+        }
+    }
     void OnNameChanged()
     {
         textToDisplay.text = NetworkedPlayerName.ToString(); 
@@ -93,7 +106,10 @@ public class PlayerManager : NetworkBehaviour
                 {
                     enemy.TakeDamageRpc(damage);
                     if(enemy.NetworkedHealth <= 0){
-                        killCount++;
+                        if (HasStateAuthority)
+                        {
+                            NetworkedKillCount++;
+                        }
                     }
                 }
             }
@@ -120,14 +136,17 @@ public class PlayerManager : NetworkBehaviour
         line.enabled = false;
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_ConfigureName(string name)
     {
         NetworkedPlayerName = name;
     }
-    void UpdateKillCountUI(){
-        if(killCountText != null){
-            killCountText.text = "Kills : " + killCount.ToString();
-        }
+
+
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_ConfigureKillCount(int newKillcount)
+    {
+        NetworkedKillCount = newKillcount;
     }
 }
