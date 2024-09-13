@@ -16,14 +16,17 @@ public class CameraController : NetworkBehaviour
         {
             return;
         }
-        transform.position = playerBody.position;
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            transform.position = playerBody.position;
 
-        float mouseX = Input.GetAxis("Mouse X");
-        float mouseY = Input.GetAxis("Mouse Y");
+            float mouseX = Input.GetAxis("Mouse X");
+            float mouseY = Input.GetAxis("Mouse Y");
 
-        verticalRotation -= mouseY * sensitivityX;
-        verticalRotation = Mathf.Clamp(verticalRotation, -70f, 70f);
-        horizontalRotation += mouseX * sensitivityX;
-        transform.rotation = Quaternion.Euler(verticalRotation, horizontalRotation, 0);       
+            verticalRotation -= mouseY * sensitivityX;
+            verticalRotation = Mathf.Clamp(verticalRotation, -70f, 70f);
+            horizontalRotation += mouseX * sensitivityX;
+            transform.rotation = Quaternion.Euler(verticalRotation, horizontalRotation, 0);
+        }
     }
 }
